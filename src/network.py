@@ -31,7 +31,7 @@ def rand_matrix(w, h, margin=INITIAL_MARGIN):
 
 
 class NeuralNetwork:
-    def __init__(self, layers, activator='tanh'):
+    def __init__(self, layers, activator='sigmoid'):
         # 3 layers, input, hidden, output
         act_func = {
             'sigmoid': (sigmoid, sigmoid_deriv),
@@ -56,9 +56,6 @@ class NeuralNetwork:
             # propagate randomly instead of iteration
             chosen = np.random.randint(datasize)
             a = [X[chosen]]  # ai = Xi, though here i is random
-
-            if k % (epochs / 10) == 0:
-                print a
 
             # save g(inj) to the end of a
             for j in xrange(noninput_layer_count):

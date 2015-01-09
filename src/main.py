@@ -18,9 +18,7 @@ def splitXY(data):
 
 
 def normalize(data):
-    data -= data.min()
-    data /= data.max()
-    return data
+    return (data - data.min()) / data.max()
 
 
 def main():
@@ -29,15 +27,16 @@ def main():
     test = np.loadtxt(files.test, delimiter=SEP)
 
     X, y = splitXY(data)
-    tX, ty = splitXY(test)
+    tX, _ = splitXY(test)
 
+    # input size 64, hidden units 50, output size 10
     nn = NeuralNetwork([64, 50, 10], activator='sigmoid')
     nn.learn(X, y, epochs=10000)
-    result = np.array([np.argmax(nn.classify(e)) for e in tX])
-    yy = test[:, -1:].ravel()
+    yhat = np.array([np.argmax(nn.classify(e)) for e in tX])
+    ytrue = test[:, -1:].ravel()
 
-    print confusion_matrix(yy, result)
-    print classification_report(yy, result)
+    print confusion_matrix(ytrue, yhat)
+    print classification_report(ytrue, yhat)
 
 
 if __name__ == "__main__":
