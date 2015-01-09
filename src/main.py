@@ -31,9 +31,9 @@ def main():
     X, y = splitXY(data)
     tX, ty = splitXY(test)
 
-    nn = NeuralNetwork(insize=64, hidden=50, outsize=10, 'sigmoid')
-    nn.fit(X, y, epochs=50000)
-    result = np.array([np.argmax(nn.predict(e)) for e in tX])
+    nn = NeuralNetwork([64, 50, 10], activator='sigmoid')
+    nn.learn(X, y, epochs=10000)
+    result = np.array([np.argmax(nn.classify(e)) for e in tX])
     yy = test[:, -1:].ravel()
 
     print confusion_matrix(yy, result)

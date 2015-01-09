@@ -4,6 +4,10 @@
 import numpy as np
 
 SEED = 3
+OUTPUT = -1
+INPUT = 0
+INITIAL_MARGIN = 0.25
+
 np.random.seed(SEED)  # fix seed for debugging
 
 def tanh(x):
@@ -22,61 +26,68 @@ def sigmoid_deriv(x):
     return sigmoid(x) * (1 - sigmoid(x))
 
 
-def rand_matrix(w, h, offset=0.25):
-    return (2 * np.random.random((w, h)) - 1) * offset
+def rand_matrix(w, h, margin=INITIAL_MARGIN):
+    return (2 * np.random.random((w, h)) - 1) * margin
 
 
 class NeuralNetwork:
-
-    def __init__(self, insize, hidden, outsize, activation='tanh'):
+    def __init__(self, layers, activator='tanh'):
+        # 3 layers, input, hidden, output
         act_func = {
             'sigmoid': (sigmoid, sigmoid_deriv),
             'tanh': (tanh, tanh_deriv)
         }
-        self.act, self.act_deriv = act_func[activation]
+        self.act, self.act_deriv = act_func[activator]
 
-        self.weights = [rand_matrix(insize + 1, hidden + 1),
-                        rand_matrix(hidden + 1, outsize)]
+        # 1 ~ last second
+        self.weights = [rand_matrix(layers[i - 1] + 1, layers[i] + 1)
+                        for i in xrange(1, len(layers) - 1)]
+        # last layer, no bias
+        self.weights.append(rand_matrix(layers[OUTPUT - 1] + 1, layers[OUTPUT]))
 
-    def fit(self, X, y, learning_rate=0.2, epochs=10000):
+    def learn(self, X, y, epochs=10000, rate=0.2):
         datasize = X.shape[0]
+        noninput_layer_count = len(self.weights)
+
         X = np.column_stack((X, np.ones(datasize))) # one column for bias
         y = np.array(y) # copy
 
-        for k in xrange(epochs):
+        for k in xrange(epochs):  # iterate until enough epochs
+            # propagate randomly instead of iteration
             chosen = np.random.randint(datasize)
-            a = [X[chosen]]
+            a = [X[chosen]]  # ai = Xi, though here i is random
 
-            for i in xrange(len(self.weights)):
-                input = np.dot(a[i], self.weights[i])
-                a.append(self.act(input))
+            if k % (epochs / 10) == 0:
+                print a
 
-            error = y[chosen] - a[-1]
-            delta = [error * self.act_deriv(a[-1])]
+            # save g(inj) to the end of a
+            for j in xrange(noninput_layer_count):
+                total = np.dot(a[j], self.weights[j])
+                a.append(self.act(total))
 
-            # from the second to the last layer
-            for l in xrange(len(a) - 2, 0, -1):
-                hidden_error = delta[-1].dot(self.weights[l].T)
+            # propagate back
+            error = y[chosen] - a[OUTPUT]
+            delta = [error * self.act_deriv(a[OUTPUT])]  # output layer
+
+            for l in xrange(len(a) - 2, 0, -1):  # backward
+                hidden_error = np.dot(delta[OUTPUT], self.weights[l].T)
                 activated = self.act_deriv(a[l])
                 delta.append(activated * hidden_error)
-            delta.reverse()
+            delta.reverse()  # now [input delta, hidden delta, ..., output delta]
 
-            for i in xrange(len(self.weights)):
-                layer = np.atleast_2d(a[i])
-                d = np.atleast_2d(delta[i])
-                # wi,j = wi, j + a * ai * delta[j]
-                self.weights[i] += learning_rate * layer.T.dot(d)
+            # update weights
+            for j in xrange(noninput_layer_count):
+                layer = np.atleast_2d(a[j]).T
+                d = np.atleast_2d(delta[j])
+                self.weights[j] += rate * np.dot(layer, d)
 
-            if k % 10000 == 0:
+            if k % (epochs / 10) == 0:  # record
                 print 'epochs:', k
                 print 'error:', error
 
-    def predict(self, x):
+    def classify(self, x):
+        noninput_layer_count = len(self.weights)
         a = np.hstack((x, [1]))
-        # x = np.array(x)
-        # temp = np.ones(x.shape[0] + 1)
-        # temp[0:-1] = x
-        # a = temp
-        for i in xrange(len(self.weights)):
+        for i in xrange(noninput_layer_count):
             a = self.act(np.dot(a, self.weights[i]))
         return a
