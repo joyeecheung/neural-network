@@ -78,9 +78,9 @@ class NeuralNetwork:
                 d = np.atleast_2d(delta[j])
                 self.weights[j] += rate * np.dot(layer, d)
 
-            if k % (epochs / 10) == 0:  # record
-                print 'epochs:', k
-                print 'error:', error
+            # if k % (epochs / 10) == 0:  # record
+            #     print 'epochs:', k
+            #     print 'error:', error
 
     def classify(self, x):
         noninput_layer_count = len(self.weights)

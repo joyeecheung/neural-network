@@ -7,7 +7,8 @@ import os
 ASSET_DIR = 'asset'
 TRAIN_FNAME = 'digitstra.txt'
 TEST_FNAME = 'digitstest.txt'
-
+CURVE = 'learning-curve.png'
+CURVE2 = 'learning-curve2.png'
 
 def get_filenames():
     """Return a named tuple of filenames(absolute filepath)."""
@@ -15,7 +16,7 @@ def get_filenames():
     parent_dir, _ = os.path.split(file_dir)
     asset_path = os.path.join(parent_dir, ASSET_DIR)
     filenames = map(lambda name: os.path.join(asset_path, name),
-                    (TRAIN_FNAME, TEST_FNAME))
+                    (TRAIN_FNAME, TEST_FNAME, CURVE, CURVE2))
 
-    fn = namedtuple('Files', ['train', 'test'])
+    fn = namedtuple('Files', ['train', 'test', 'curve', 'curve2'])
     return fn(*filenames)
