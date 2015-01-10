@@ -32,8 +32,8 @@
 \begin{document}
 
 \title{
-Artificial Intelligence Project 2 \\
-Decision Tree
+Artificial Intelligence Project 3 \\
+Neural Networks
 }
 \author{Class 1, Team 6}
 \date{\today}
@@ -72,7 +72,7 @@ as the activation function.
 
 \subsection{Building the Neural Network}
 
-First we initialize the neural network with random weights ranging between $[-0.25, 0.25]$ (it is just a empirical value). Then, we use back propagation for training the network. Here instead of running the backpropagation on the training data sequantially, we randomly choose records from the training data to propagate. The algorithm is discribed in Algorithm~\ref{alg:train}.
+First we initialize the neural network with random weights ranging between $[-0.25, 0.25]$ (it is just an empirical value). Then, we use back propagation for training the network. Here instead of running the backpropagation on the training data sequantially, we randomly choose records from the training data to propagate. The algorithm is discribed in Algorithm~\ref{alg:train}.
 
 The back propagation, as shown in Algorithm~\ref{alg:bp}, will be run until a certain number of epochs is reached.
 
@@ -156,15 +156,15 @@ The algorithm for classifying an observation is described in Algorithm~\ref{alg:
 
 \section{Experiment Result}
 
-For this project, we set the number of layers in the neural network to $3$ (i.e. one input layer, one hidden layer, one output layer), and the learning rate $\alpha$ is set to $0.2$. Before building the neural network, we first transform the labels into vectors. Every elements in the vector is first set to 0, then the element with the same index as the lable will be set to 1. For example, when the label is $0$, we transform it into a vector:
+For this project, we set the number of layers in the neural network to $3$ (i.e. one input layer, one hidden layer, one output layer), and the learning rate $\alpha$ is set to $0.2$. Before building the neural network, we first transform the labels into vectors. Every elements in the vector is first set to 0, then the element with the same index as the label will be set to 1. For example, when the label is $0$, we transform it into a vector:
 
 $$[1, 0, 0, 0, 0, 0, 0, 0, 0, 0]$$
 
 Then, the input layer consists of vectors of size $64$, and the output layer consists of vectors of size $10$. The output vectors contains the probabilities for each label, here we choose the label with the largest probability as the final result.
 
-\paragraph{We evaluate the implementation from two different perspectives.} First, we examine the relationship between its precision and the size of the training data (i.e. the learning curve), as shown in Figure ~\ref{fig:curve}. The number of hidden units is set to $50$, and we stop the iteration after $50,000$ epochs. When the size of training data is larger than $1000$, the precision stays higher than $90\%$. Generally the precision increases with the size of training data, but there are signs of overfitting.
+\paragraph{We evaluate the implementation from two different perspectives.} First, we examine the relationship between its precision and the size of the training data (i.e. the learning curve), as shown in Figure~\ref{fig:curve}. The number of hidden units is set to $50$, and we stop the iteration after $50,000$ epochs. When the size of training data is larger than $1000$, the precision stays higher than $90\%$. Generally the precision increases with the size of training data, but there are signs of overfitting.
 
-Then, we examine the relationship between the total errors produced by the neural network and the number of epochs. Here we use the full training data set and set the number of hidden units to $50$. As shown in Figure ~\ref{fig:error}, The number of errors decreases significantly when the epochs grows large enough. When the number of epochs becomes larger than $20, 000$, the number of errors stays at about $100$ (given that the size of the test set is about $1,700$, this implies that the precision stays over $90\%$).
+Then, we examine the relationship between the total errors produced by the neural network and the number of epochs. Here we use the full training data set and set the number of hidden units to $50$. As shown in Figure~\ref{fig:error}, The number of errors decreases significantly when the epochs grows large enough. When the number of epochs becomes larger than $20, 000$, the number of errors stays at about $100$ (given that the size of the test set is about $1,700$, this implies that the precision stays over $90\%$).
 
 \begin{figure}[H]
 \centering
