@@ -7,21 +7,6 @@
 The source code can be run under windows or linux with python 2.7+ and the libraries above.
 
 ##Directory structure
-
-    ./
-    ├── doc
-    │   └── report.pdf  (the report)
-    ├── asset
-    │   ├── dataset.txt  (data set)
-    │   ├── learning-curve.png  (learning curve plot)
-    │   ├── pruned-tree.png  (visualization of the pruned decision tree)
-    │   └── tree.png  (visualization of the decision tree)
-    └── src
-        ├── main.py  (generate the learning curve)
-        ├── preprocess.py  (split the dataset and store them in json)
-        ├── tree.py  (for building, pruning, drawing decision trees)
-        └── util.py  (directory structure configurations)
-
     .
     ├── asset
     │   ├── digitstest.txt  (test set, the last line is removed since its size is wrong)
