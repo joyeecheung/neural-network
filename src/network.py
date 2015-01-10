@@ -33,8 +33,20 @@ def rand_matrix(w, h, margin=INITIAL_MARGIN):
 
 class NeuralNetwork:
 
+    """A multilayer perceptron(MPL)."""
+
     def __init__(self, layers, activator='logistic', rate=0.2):
-        # 3 layers, input, hidden, output
+        """
+        Parameters
+        ---------
+        layers: array of number of units in each layer.
+            If the input size is 2, output size is 3, and there should be
+            one hidden layer of size 4, then it is [2, 4, 3].
+        activator:
+            'logistic'(logistic function) or 'tanh'(hyperbolic tangent)
+        rate:
+            the learning rate
+        """
         act_func = {
             'logistic': (logistic, logistic_deriv),
             'tanh': (tanh, tanh_deriv)
@@ -50,6 +62,8 @@ class NeuralNetwork:
             rand_matrix(layers[OUTPUT - 1] + 1, layers[OUTPUT]))
 
     def learn(self, X, y, epochs=10000):
+        """Train the network with sample input X,
+        sample output y in given epochs."""
         datasize = X.shape[0]
         X = np.column_stack((X, np.ones(datasize)))  # one column for bias
         y = np.array(y)  # copy
@@ -60,6 +74,7 @@ class NeuralNetwork:
             self.propagate(X[chosen], y[chosen])
 
     def propagate(self, x, y):
+        """Propagate a sample of (x, y) through the network."""
         noninput_layer_count = len(self.weights)
 
         a = [x]  # to 2d
@@ -86,6 +101,7 @@ class NeuralNetwork:
             self.weights[j] += self.rate * total
 
     def classify(self, x):
+        """Classify observation x."""
         noninput_layer_count = len(self.weights)
         a = np.hstack((x, [1]))
         for i in xrange(noninput_layer_count):

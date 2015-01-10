@@ -6,7 +6,6 @@ from collections import Counter
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 import numpy as np
-from sklearn.metrics import confusion_matrix, classification_report
 
 from util import get_filenames
 from network import NeuralNetwork
@@ -80,7 +79,7 @@ def main():
 
     x, y = [], []
     epochs = 0
-    nn_epochs = NeuralNetwork([64, 50, 10], activator='sigmoid')
+    nn_epochs = NeuralNetwork([64, 50, 10], activator='logistic')
 
     # generate the learning curve data
     while epochs < TOTAL_EPOCH:
@@ -108,7 +107,7 @@ def main():
         sampleX, sampley = trainX[:samplesize], trainy[:samplesize]
 
         # input size 64, hidden units 50, output size 10
-        nn = NeuralNetwork([64, 50, 10], activator='sigmoid')
+        nn = NeuralNetwork([64, 50, 10], activator='logistic')
         nn.learn(sampleX, sampley, epochs=TOTAL_EPOCH)
         yhat = [np.argmax(nn.classify(e)) for e in testX]
 
