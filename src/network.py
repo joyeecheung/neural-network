@@ -10,6 +10,7 @@ INITIAL_MARGIN = 0.25
 
 np.random.seed(SEED)  # fix seed for debugging
 
+
 def tanh(x):
     return np.tanh(x)
 
@@ -18,12 +19,12 @@ def tanh_deriv(x):
     return 1.0 - x ** 2
 
 
-def sigmoid(x):
+def logistic(x):
     return 1 / (1 + np.exp(-x))
 
 
-def sigmoid_deriv(x):
-    return sigmoid(x) * (1 - sigmoid(x))
+def logistic_deriv(x):
+    return logistic(x) * (1 - logistic(x))
 
 
 def rand_matrix(w, h, margin=INITIAL_MARGIN):
@@ -31,56 +32,58 @@ def rand_matrix(w, h, margin=INITIAL_MARGIN):
 
 
 class NeuralNetwork:
-    def __init__(self, layers, activator='sigmoid'):
+
+    def __init__(self, layers, activator='logistic', rate=0.2):
         # 3 layers, input, hidden, output
         act_func = {
-            'sigmoid': (sigmoid, sigmoid_deriv),
+            'logistic': (logistic, logistic_deriv),
             'tanh': (tanh, tanh_deriv)
         }
-        self.act, self.act_deriv = act_func[activator]
+        self.act, self.act_deriv = act_func[activator]  # g, g'
+        self.rate = rate  # learning rate
 
         # 1 ~ last second
         self.weights = [rand_matrix(layers[i - 1] + 1, layers[i] + 1)
                         for i in xrange(1, len(layers) - 1)]
         # last layer, no bias
-        self.weights.append(rand_matrix(layers[OUTPUT - 1] + 1, layers[OUTPUT]))
+        self.weights.append(
+            rand_matrix(layers[OUTPUT - 1] + 1, layers[OUTPUT]))
 
-    def learn(self, X, y, epochs=10000, rate=0.2):
+    def learn(self, X, y, epochs=10000):
         datasize = X.shape[0]
-        noninput_layer_count = len(self.weights)
-
-        X = np.column_stack((X, np.ones(datasize))) # one column for bias
-        y = np.array(y) # copy
+        X = np.column_stack((X, np.ones(datasize)))  # one column for bias
+        y = np.array(y)  # copy
 
         for k in xrange(epochs):  # iterate until enough epochs
-            # propagate randomly instead of iteration
+            # propagate randomly instead of sequentially
             chosen = np.random.randint(datasize)
-            a = [X[chosen]]  # ai = Xi, though here i is random
+            self.propagate(X[chosen], y[chosen])
 
-            # save g(inj) to the end of a
-            for j in xrange(noninput_layer_count):
-                total = np.dot(a[j], self.weights[j])
-                a.append(self.act(total))
+    def propagate(self, x, y):
+        noninput_layer_count = len(self.weights)
 
-            # propagate back
-            error = y[chosen] - a[OUTPUT]
-            delta = [error * self.act_deriv(a[OUTPUT])]  # output layer
+        a = [x]  # to 2d
+        # save g(inj) to the end of a
+        for j in xrange(noninput_layer_count):
+            total = np.dot(a[j], self.weights[j])
+            a.append(self.act(total))
+        a = np.array(a)  # now size is fixed, convert to numpy array
 
-            for l in xrange(len(a) - 2, 0, -1):  # backward
-                hidden_error = np.dot(delta[OUTPUT], self.weights[l].T)
-                activated = self.act_deriv(a[l])
-                delta.append(activated * hidden_error)
-            delta.reverse()  # now [input delta, hidden delta, ..., output delta]
+        # propagate back
+        error = y - a[OUTPUT]
+        delta = [error * self.act_deriv(a[OUTPUT])]  # output layer
 
-            # update weights
-            for j in xrange(noninput_layer_count):
-                layer = np.atleast_2d(a[j]).T
-                d = np.atleast_2d(delta[j])
-                self.weights[j] += rate * np.dot(layer, d)
+        for l in xrange(len(a) - 2, 0, -1):  # backward
+            hidden_error = np.dot(delta[OUTPUT], self.weights[l].T)
+            activated = self.act_deriv(a[l])
+            delta.append(activated * hidden_error)
+        delta.reverse()  # now [input delta, hidden delta, ..., output delta]
+        delta = np.array(delta)  # convert to numpy array
 
-            # if k % (epochs / 10) == 0:  # record
-            #     print 'epochs:', k
-            #     print 'error:', error
+        # update weights
+        for j in xrange(noninput_layer_count):
+            total = np.dot(a[j][:, None], delta[j][None])
+            self.weights[j] += self.rate * total
 
     def classify(self, x):
         noninput_layer_count = len(self.weights)

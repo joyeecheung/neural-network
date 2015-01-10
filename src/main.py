@@ -13,6 +13,8 @@ from network import NeuralNetwork
 
 SEP = ','
 SAMPLE = 30
+TOTAL_EPOCH = 50000
+
 
 def splitXY(data):
     X = data[:, :-1]
@@ -30,8 +32,8 @@ def plot_curve(x, y, xlabel, ylabel, name, dest):
     print name
     # statistics
     ymean, ystd, ymin, ymax = np.mean(y), np.std(y), np.min(y), np.max(y)
-    print 'Mean of precision = %.4f' % (ymean)
-    print 'Standard deviation of precision = %.4f' % (ystd)
+    print 'Mean of %s = %.4f' % (ylabel, ymean)
+    print 'Standard deviation of %s = %.4f' % (ylabel, ystd)
     print 'Min = %.4f, max = %.4f' % (ymin, ymax)
 
     xy = sorted(zip(x, y), key=lambda a: a[0])
@@ -40,8 +42,9 @@ def plot_curve(x, y, xlabel, ylabel, name, dest):
     plt.figure()
     # setup decorations
     plt.rc('font', family='serif')
-    plt.yticks(np.arange(0.0, 1.0, 0.1))
-    plt.ylim(0.0, 1.0)
+
+    # plt.yticks(np.arange(ylim[0], ylim[1], ylim[1]))
+    # plt.ylim(0.0, 1.0)
     plt.grid(True)
     plt.title(name)
     plt.xlabel(xlabel)
@@ -55,8 +58,12 @@ def plot_curve(x, y, xlabel, ylabel, name, dest):
     # annotation
     box = dict(boxstyle='square', fc="w", ec="k")
     txt = '$\mu = %.4f$, $\sigma = %.4f$' % (ymean, ystd)
-    txt += ', $min = %.4f$, $max = %.4f$' % (ymin, ymax)
-    plt.text(170, 0.05, txt, bbox=box)
+    txt += '\n$min = %.4f$, $max = %.4f$' % (ymin, ymax)
+    pltymin, pltymax = plt.ylim()
+    pltxmin, pltxmax = plt.xlim()
+    txtx = pltxmin + (pltxmax - pltxmin) * 0.5
+    txty = pltymin + (pltymax - pltymin) * 0.5
+    plt.text(txtx, txty, txt, bbox=box)
 
     plt.savefig(dest)
     print 'Save', name, 'to', dest
@@ -70,56 +77,52 @@ def main():
 
     trainX, trainy = splitXY(data)
     testX, _ = splitXY(test)
-    ytrue = test[:, -1:].ravel()
 
+    x, y = [], []
+    epochs = 0
+    nn_epochs = NeuralNetwork([64, 50, 10], activator='sigmoid')
+
+    # generate the learning curve data
+    while epochs < TOTAL_EPOCH:
+        epochs += TOTAL_EPOCH / SAMPLE
+        # input size 64, hidden units 50, output size 10
+        nn_epochs.learn(trainX, trainy, epochs=TOTAL_EPOCH / SAMPLE)
+        yhat = [np.argmax(nn_epochs.classify(e)) for e in testX]
+
+        check = [np.argmax(nn_epochs.classify(record[:-1])) == record[-1]
+                 for record in test]
+        counter = Counter(check)
+        print 'epochs = %d,' % (epochs),
+        print 'Total errors = %.4f' % (counter[False])
+        x.append(epochs)
+        y.append(counter[False])
+
+    plot_curve(x, y, 'Epochs', 'Total errors',
+               'Errors decreased with epochs', files.error)
 
     x, y = [], []
 
     # generate the learning curve data
     for i in xrange(1, SAMPLE + 1):
-        epochs = 6000 * i / SAMPLE
+        samplesize = datasize * i / SAMPLE
+        sampleX, sampley = trainX[:samplesize], trainy[:samplesize]
+
         # input size 64, hidden units 50, output size 10
         nn = NeuralNetwork([64, 50, 10], activator='sigmoid')
-        nn.learn(trainX, trainy, epochs=epochs)
+        nn.learn(sampleX, sampley, epochs=TOTAL_EPOCH)
         yhat = [np.argmax(nn.classify(e)) for e in testX]
 
         check = [np.argmax(nn.classify(record[:-1])) == record[-1]
                  for record in test]
         counter = Counter(check)
         precision = counter[True] / float(counter[True] + counter[False])
-        print 'epochs = %d,' % (epochs),
+        print 'training data size = %d,' % (samplesize),
         print 'precision = %.4f' % (precision)
-        x.append(epochs)
+        x.append(samplesize)
         y.append(precision)
 
-    plot_curve(x, y, 'Epochs', 'Precision',
-               'Learning curve', files.curve2)
-
-    # x, y = [], []
-
-    # # generate the learning curve data
-    # for i in xrange(1, SAMPLE + 1):
-    #     samplesize = datasize * i / SAMPLE
-    #     sampleX, sampley = trainX[:samplesize], trainy[:samplesize]
-
-    #     # input size 64, hidden units 50, output size 10
-    #     nn = NeuralNetwork([64, 50, 10], activator='sigmoid')
-    #     nn.learn(sampleX, sampley, epochs=10000)
-    #     yhat = [np.argmax(nn.classify(e)) for e in testX]
-
-    #     check = [np.argmax(nn.classify(record[:-1])) == record[-1]
-    #              for record in test]
-    #     counter = Counter(check)
-    #     precision = counter[True] / float(counter[True] + counter[False])
-    #     print 'training data size = %d,' % (samplesize),
-    #     print 'precision = %.4f' % (precision)
-    #     x.append(samplesize)
-    #     y.append(precision)
-
-    # plot_curve(x, y, 'Training data size', 'Precision',
-    #            'Learning curve', files.curve)
-
-
+    plot_curve(x, y, 'Training data size', 'Precision',
+               'Learning curve', files.curve)
 
 
 if __name__ == "__main__":
